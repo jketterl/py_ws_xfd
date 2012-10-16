@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from ws4py.client.threadedclient import WebSocketClient
+import RPi.GPIO as GPIO
+import threading, time
 
 class JenkinsClient(WebSocketClient):
     def opened(self):
@@ -14,7 +16,9 @@ class JenkinsClient(WebSocketClient):
 if __name__ == '__main__':
     try:
         ws = JenkinsClient('ws://dev-build.pocci.cxo.name:8000/jenkins', protocols=['http-only', 'chat'])
-        ws.daemon = False
         ws.connect()
-    except KeyboardInterrupt:
+	while threading.active_count() > 0 :
+		time.sleep(1)
+    except (KeyboardInterrupt, SystemExit):
+	print "shutting down"
         ws.close()
