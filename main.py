@@ -1,7 +1,8 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 from ws4py.client.threadedclient import WebSocketClient
 import RPi.GPIO as GPIO
-import threading, time, json, urllib2, base64, ConfigParser
+import threading, time, json, urllib2, base64, ConfigParser, socket
 
 class JenkinsClient(WebSocketClient):
 	def __init__(self, host, httpPort, wsPort, project, user, token):
@@ -12,12 +13,15 @@ class JenkinsClient(WebSocketClient):
 		self.user = user
 		self.token = token
 		super(JenkinsClient, self).__init__('ws://' + self.host + ':' + str(self.wsPort) + '/jenkins')
+		#super(JenkinsClient, self).__init__('ws://jketterl-n0:8080/')
 
 	def opened(self):
 		print "Connection opened"
 
 	def closed(self, code, reason):
 		print "Closed down", code, reason
+		self.close()
+		self.start()
 
 	def received_message(self, m):
 		print "=> %d %s" % (len(m), str(m))
@@ -25,11 +29,20 @@ class JenkinsClient(WebSocketClient):
 		self.update(message)
 
 	def start(self):
-		self.connect()
+		connected = False
+		while not connected:
+			try:
+				print 'attempting connection...'
+				self.connect()
+				connected = True
+			except socket.error as e:
+				print 'failed'
+				print e
+				time.sleep(10);
 		self.readCurrentState()
 
 	def update(self, message):
-		if project in message and message['project'] != project: return
+		if 'project' in message and message['project'] != self.project: return
 		# turn all LEDs off
 		GPIO.output(11, GPIO.LOW)
 		GPIO.output(12, GPIO.LOW)
@@ -50,6 +63,9 @@ class JenkinsClient(WebSocketClient):
 		message = json.loads(res.read())
 		self.update(message)
 
+	def ponged(self):
+		print 'ponged'
+
 if __name__ == '__main__':
 	GPIO.setmode(GPIO.BOARD)
 	GPIO.setup(11, GPIO.OUT)
@@ -58,8 +74,6 @@ if __name__ == '__main__':
 	GPIO.output(12, GPIO.LOW)
 	GPIO.setup(13, GPIO.OUT)
 	GPIO.output(13, GPIO.LOW)
-
-	project = 'Autorensystem'
 
 	config = ConfigParser.ConfigParser()
 	config.read('config.ini')
@@ -73,7 +87,8 @@ if __name__ == '__main__':
 				   config.get('jenkins', 'token'));
 		ws.start()
 		while threading.active_count() > 0 :
-			time.sleep(1)
+			time.sleep(10)
+			ws.sender(ws.stream.ping('some_data'));
 
 	except (KeyboardInterrupt, SystemExit):
 		print "shutting down"
