@@ -4,7 +4,7 @@ from ws4py.client.threadedclient import WebSocketClient
 import RPi.GPIO as GPIO
 import threading, time, json, urllib2, base64, ConfigParser, socket
 
-class JenkinsClient(WebSocketClient):
+class JenkinsClient:
 	def __init__(self, host, httpPort, wsPort, project, user, token):
 		self.host = host
 		self.httpPort = httpPort
@@ -12,33 +12,26 @@ class JenkinsClient(WebSocketClient):
 		self.project = project
 		self.user = user
 		self.token = token
-		super(JenkinsClient, self).__init__('ws://' + self.host + ':' + str(self.wsPort) + '/jenkins')
-
-	def opened(self):
-		print "Connection opened"
-
-	def closed(self, code, reason):
-		print "Closed down", code, reason
-		self.close()
-		self.start()
-
-	def received_message(self, m):
-		print "=> %d %s" % (len(m), str(m))
-		message = json.loads(str(m));
-		self.update(message)
+		self.socket = None
 
 	def start(self):
-		connected = False
-		while not connected:
-			try:
-				print 'attempting connection...'
-				self.connect()
-				connected = True
-			except socket.error as e:
-				print 'failed'
-				print e
-				time.sleep(10);
 		self.readCurrentState()
+		self.getSocket()
+
+	def getSocket(self):
+		if self.socket is None:
+			self.socket = JenkinsSocket('ws://' + self.host + ':' + str(self.wsPort) + '/jenkins', self);
+			self.socket.start()
+		return self.socket
+
+	def onClose(self, origin):
+		if origin is not self.socket: return
+		self.socket = None
+		self.getSocket()
+
+	def onMessage(self, message, origin):
+		if origin is not self.socket: return
+		self.update(message)
 
 	def update(self, message):
 		if 'project' in message and message['project'] != self.project: return
@@ -61,6 +54,44 @@ class JenkinsClient(WebSocketClient):
 		res = urllib2.urlopen(req)
 		message = json.loads(res.read())
 		self.update(message)
+
+	def ping(self):
+		ping = self.getSocket().stream.ping('some_data')
+		self.getSocket().sender(ping);
+
+	def close(self):
+		if self.socket is None: return
+		self.socket.close()
+
+class JenkinsSocket(WebSocketClient):
+	def __init__(self, url, target):
+		self.target = target
+		super(JenkinsSocket, self).__init__(url)
+
+	def opened(self):
+		print "Connection opened"
+
+	def closed(self, code, reason):
+		print "Closed down", code, reason
+		self.close()
+		self.target.onClose(self)
+
+	def received_message(self, m):
+		#print "=> %d %s" % (len(m), str(m))
+		message = json.loads(str(m));
+		self.target.onMessage(message, self)
+
+	def start(self):
+		connected = False
+		while not connected:
+			try:
+				print 'attempting connection...'
+				self.connect()
+				connected = True
+			except socket.error as e:
+				print 'failed'
+				print e
+				time.sleep(10);
 
 	def ponged(self, pong):
 		print 'ponged: ' + pong
@@ -88,8 +119,7 @@ if __name__ == '__main__':
 		ws.start()
 		while threading.active_count() > 0 :
 			time.sleep(10)
-			ping = ws.stream.ping('some_data')
-			ws.sender(ping);
+			ws.ping()
 
 	except (KeyboardInterrupt, SystemExit):
 		print "shutting down"
