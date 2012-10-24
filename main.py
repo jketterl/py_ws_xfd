@@ -13,7 +13,6 @@ class JenkinsClient(WebSocketClient):
 		self.user = user
 		self.token = token
 		super(JenkinsClient, self).__init__('ws://' + self.host + ':' + str(self.wsPort) + '/jenkins')
-		#super(JenkinsClient, self).__init__('ws://jketterl-n0:8080/')
 
 	def opened(self):
 		print "Connection opened"
@@ -63,8 +62,9 @@ class JenkinsClient(WebSocketClient):
 		message = json.loads(res.read())
 		self.update(message)
 
-	def ponged(self):
-		print 'ponged'
+	def ponged(self, pong):
+		print 'ponged: ' + pong
+		super(JenkinsClient, self).ponged()
 
 if __name__ == '__main__':
 	GPIO.setmode(GPIO.BOARD)
@@ -88,7 +88,8 @@ if __name__ == '__main__':
 		ws.start()
 		while threading.active_count() > 0 :
 			time.sleep(10)
-			ws.sender(ws.stream.ping('some_data'));
+			ping = ws.stream.ping('some_data')
+			ws.sender(ping);
 
 	except (KeyboardInterrupt, SystemExit):
 		print "shutting down"
