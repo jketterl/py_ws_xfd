@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 from ws4py.client.threadedclient import WebSocketClient
 import RPi.GPIO as GPIO
-import threading, time, json, urllib2, base64, ConfigParser, socket
+import threading, time, json, urllib2, base64, ConfigParser, socket, logging
+
+logging.basicConfig(format="%(asctime)s %(message)s", level=logging.DEBUG)
 
 class JenkinsClient:
 	def __init__(self, host, httpPort, wsPort, project, user, token):
@@ -69,10 +71,10 @@ class JenkinsSocket(WebSocketClient):
 		super(JenkinsSocket, self).__init__(url)
 
 	def opened(self):
-		print "Connection opened"
+		logging.info("Connection opened")
 
 	def closed(self, code, reason):
-		print "Closed down", code, reason
+		logging.info("Closed down: %i %s", code, reason)
 		self.close()
 		self.target.onClose(self)
 
@@ -85,16 +87,16 @@ class JenkinsSocket(WebSocketClient):
 		connected = False
 		while not connected:
 			try:
-				print 'attempting connection...'
+				logging.info('attempting connection...')
 				self.connect()
 				connected = True
 			except socket.error as e:
-				print 'failed'
-				print e
+				logging.warn('failed')
+				logging.warn(str(e))
 				time.sleep(10);
 
 	def ponged(self, pong):
-		print 'ponged: ' + pong
+		logging.debug('ponged: ' + pong)
 		super(JenkinsClient, self).ponged()
 
 if __name__ == '__main__':
@@ -122,6 +124,6 @@ if __name__ == '__main__':
 			ws.ping()
 
 	except (KeyboardInterrupt, SystemExit):
-		print "shutting down"
+		logging.info("shutting down")
 		GPIO.cleanup()
         	ws.close()
