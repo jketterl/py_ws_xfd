@@ -15,9 +15,11 @@ class JenkinsClient:
 		self.user = user
 		self.token = token
 		self.socket = None
+		self.shouldBeOnline = False
 
 	def start(self):
 		self.readCurrentState()
+		self.shouldBeOnline = True
 		self.getSocket()
 
 	def getSocket(self):
@@ -29,6 +31,7 @@ class JenkinsClient:
 	def onClose(self, origin):
 		if origin is not self.socket: return
 		self.socket = None
+		if not self.shouldBeOnline: return
 		self.getSocket()
 
 	def onMessage(self, message, origin):
@@ -62,6 +65,7 @@ class JenkinsClient:
 		self.getSocket().sender(ping);
 
 	def close(self):
+		self.shouldBeOnline = False
 		if self.socket is None: return
 		self.socket.close()
 
@@ -102,10 +106,16 @@ class JenkinsSocket(WebSocketClient):
 if __name__ == '__main__':
 	GPIO.setmode(GPIO.BOARD)
 	GPIO.setup(11, GPIO.OUT)
+	GPIO.output(11, GPIO.HIGH)
+	time.sleep(1)
 	GPIO.output(11, GPIO.LOW)
 	GPIO.setup(12, GPIO.OUT)
+	GPIO.output(12, GPIO.HIGH)
+	time.sleep(1)
 	GPIO.output(12, GPIO.LOW)
 	GPIO.setup(13, GPIO.OUT)
+	GPIO.output(13, GPIO.HIGH)
+	time.sleep(1)
 	GPIO.output(13, GPIO.LOW)
 
 	config = ConfigParser.ConfigParser()
