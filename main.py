@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from ws4py.client.threadedclient import WebSocketClient
-import RPi.GPIO as GPIO
+#from output.ampel import Ampel
+from output.console import Console
 import threading, time, json, urllib2, base64, ConfigParser, socket, logging
 
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.DEBUG)
@@ -41,16 +42,7 @@ class JenkinsClient:
 	def update(self, message):
 		if 'project' in message and message['project'] != self.project: return
 		# turn all LEDs off
-		GPIO.output(11, GPIO.LOW)
-		GPIO.output(12, GPIO.LOW)
-		GPIO.output(13, GPIO.LOW)
-		# turn on only the one that reflects our status
-		if message['result'] == 'SUCCESS':
-			GPIO.output(13, GPIO.HIGH)
-		elif message['result'] == 'UNSTABLE':
-			GPIO.output(12, GPIO.HIGH)
-		elif message['result'] == 'FAILURE':
-			GPIO.output(11, GPIO.HIGH)
+		output.setState(message['result'])
 
 	def readCurrentState(self):
 		auth = base64.encodestring('%s:%s' % (self.user, self.token)).replace('\n', '')
@@ -104,22 +96,12 @@ class JenkinsSocket(WebSocketClient):
 		super(JenkinsClient, self).ponged()
 
 if __name__ == '__main__':
-	GPIO.setmode(GPIO.BOARD)
-	GPIO.setup(11, GPIO.OUT)
-	GPIO.output(11, GPIO.HIGH)
-	time.sleep(1)
-	GPIO.output(11, GPIO.LOW)
-	GPIO.setup(12, GPIO.OUT)
-	GPIO.output(12, GPIO.HIGH)
-	time.sleep(1)
-	GPIO.output(12, GPIO.LOW)
-	GPIO.setup(13, GPIO.OUT)
-	GPIO.output(13, GPIO.HIGH)
-	time.sleep(1)
-	GPIO.output(13, GPIO.LOW)
 
 	config = ConfigParser.ConfigParser()
 	config.read('config.ini')
+	
+	#output = Ampel()
+	output = Console()
 
 	try:
 		ws = JenkinsClient(config.get('jenkins', 'host'),
@@ -135,5 +117,5 @@ if __name__ == '__main__':
 
 	except (KeyboardInterrupt, SystemExit):
 		logging.info("shutting down")
-		GPIO.cleanup()
-        	ws.close()
+		output.shutdown()
+		ws.close()
