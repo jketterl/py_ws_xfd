@@ -8,7 +8,8 @@ import threading, time, json, urllib2, base64, ConfigParser, socket, logging
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.DEBUG)
 
 class JenkinsClient:
-	def __init__(self, host, httpPort, wsPort, projects, user, token):
+	def __init__(self, output, host, httpPort, wsPort, projects, user, token):
+		self.output = output
 		self.host = host
 		self.httpPort = httpPort
 		self.wsPort = wsPort
@@ -43,7 +44,7 @@ class JenkinsClient:
 	def update(self, message):
 		if 'project' in message and message['project'] not in self.projects: return
 		self.states[message['project']] = message['result']
-		output.setState(list(set(self.states.values())))
+		self.output.setState(list(set(self.states.values())))
 
 	def readCurrentState(self):
 		logging.info('getting initial states')
@@ -108,7 +109,8 @@ if __name__ == '__main__':
 	output = Console()
 
 	try:
-		ws = JenkinsClient(config.get('jenkins', 'host'),
+		ws = JenkinsClient(output,
+				   config.get('jenkins', 'host'),
 				   config.get('jenkins', 'httpPort'),
 				   config.get('jenkins', 'wsPort'),
 				   config.get('project', 'name').split(','),
