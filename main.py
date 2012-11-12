@@ -8,15 +8,16 @@ import threading, time, json, urllib2, base64, ConfigParser, socket, logging
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.DEBUG)
 
 class JenkinsClient:
-	def __init__(self, host, httpPort, wsPort, project, user, token):
+	def __init__(self, host, httpPort, wsPort, projects, user, token):
 		self.host = host
 		self.httpPort = httpPort
 		self.wsPort = wsPort
-		self.project = project
+		self.projects = projects
 		self.user = user
 		self.token = token
 		self.socket = None
 		self.shouldBeOnline = False
+		self.states = dict(zip(self.projects,  ['UNSTABLE'] * len(projects)))
 
 	def start(self):
 		self.readCurrentState()
@@ -40,17 +41,20 @@ class JenkinsClient:
 		self.update(message)
 
 	def update(self, message):
-		if 'project' in message and message['project'] != self.project: return
-		# turn all LEDs off
-		output.setState(message['result'])
+		if 'project' in message and message['project'] not in self.projects: return
+		self.states[message['project']] = message['result']
+		output.setState(list(set(self.states.values())))
 
 	def readCurrentState(self):
+		logging.info('getting initial states')
 		auth = base64.encodestring('%s:%s' % (self.user, self.token)).replace('\n', '')
-		req = urllib2.Request('http://' + self.host + ':' + str(self.httpPort) + '/job/' + self.project + '/lastBuild/api/json')
-		req.add_header('Authorization', 'Basic: %s' % auth)
-		res = urllib2.urlopen(req)
-		message = json.loads(res.read())
-		self.update(message)
+		for project in self.projects:
+			req = urllib2.Request('http://' + self.host + ':' + str(self.httpPort) + '/job/' + project + '/lastBuild/api/json')
+			req.add_header('Authorization', 'Basic: %s' % auth)
+			res = urllib2.urlopen(req)
+			message = json.loads(res.read())
+			message['project'] = project
+			self.update(message)
 
 	def ping(self):
 		ping = self.getSocket().stream.ping('some_data')
@@ -67,7 +71,7 @@ class JenkinsSocket(WebSocketClient):
 		super(JenkinsSocket, self).__init__(url)
 
 	def opened(self):
-		logging.info("Connection opened")
+		logging.info("Websocket connection opened")
 
 	def closed(self, code, reason):
 		logging.info("Closed down: %i %s", code, reason)
@@ -83,11 +87,11 @@ class JenkinsSocket(WebSocketClient):
 		connected = False
 		while not connected:
 			try:
-				logging.info('attempting connection...')
+				logging.info('Attempting websocket connection...')
 				self.connect()
 				connected = True
 			except socket.error as e:
-				logging.warn('failed')
+				logging.warn('Websocket connection failed')
 				logging.warn(str(e))
 				time.sleep(10);
 
@@ -107,7 +111,7 @@ if __name__ == '__main__':
 		ws = JenkinsClient(config.get('jenkins', 'host'),
 				   config.get('jenkins', 'httpPort'),
 				   config.get('jenkins', 'wsPort'),
-				   config.get('project', 'name'),
+				   config.get('project', 'name').split(','),
 				   config.get('jenkins', 'user'),
 				   config.get('jenkins', 'token'));
 		ws.start()

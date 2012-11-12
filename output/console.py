@@ -8,5 +8,5 @@ from output import Output
 import logging
 
 class Console(Output):
-    def setState(self, state):
-        logging.info("setting state: %s" % state)
+    def setState(self, states):
+        logging.info("setting state: %s" % ', '.join(states))

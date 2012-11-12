@@ -25,14 +25,16 @@ class Ampel(Output):
         GPIO.output(13, GPIO.LOW)
         super(Ampel, self).__init__()
         
-    def setState(self, state):
+    def setState(self, states):
+        # turn all LEDs off
         GPIO.output(11, GPIO.LOW)
         GPIO.output(12, GPIO.LOW)
         GPIO.output(13, GPIO.LOW)
         # turn on only the one that reflects our status
-        if state == 'SUCCESS':
-            GPIO.output(13, GPIO.HIGH)
-        elif state == 'UNSTABLE':
-            GPIO.output(12, GPIO.HIGH)
-        elif state == 'FAILURE':
-            GPIO.output(11, GPIO.HIGH)
+        for state in states:
+            if state == 'SUCCESS':
+                GPIO.output(13, GPIO.HIGH)
+            elif state == 'UNSTABLE':
+                GPIO.output(12, GPIO.HIGH)
+            elif state == 'FAILURE':
+                GPIO.output(11, GPIO.HIGH)
