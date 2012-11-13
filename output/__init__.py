@@ -1,4 +1,4 @@
-class Output:
+class Output(object):
     def shutdown(self):
         pass
     
