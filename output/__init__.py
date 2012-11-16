@@ -4,6 +4,9 @@ class Output(object):
     
     def setState(self, state):
         pass
-
-from .ampel import Ampel
-from .console import Console
+    
+    @staticmethod
+    def factory(classname):
+        mod = __import__("output.%s" % classname.lower(), fromlist=[classname.capitalize()])
+        cls = getattr(mod, classname.capitalize())
+        return cls()
