@@ -4,3 +4,6 @@ class Output:
     
     def setState(self, state):
         pass
+
+#from .ampel import Ampel
+from .console import Console

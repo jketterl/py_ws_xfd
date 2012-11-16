@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from ws4py.client.threadedclient import WebSocketClient
-#from output.ampel import Ampel
-from output.console import Console
+#from output import Ampel
+from output import Console
 import threading, time, json, urllib2, base64, ConfigParser, socket, logging
 
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.DEBUG)
 
-class JenkinsClient:
+class JenkinsClient(object):
 	def __init__(self, output, host, httpPort, wsPort, projects, user, token):
 		self.output = output
 		self.host = host
@@ -96,10 +96,6 @@ class JenkinsSocket(WebSocketClient):
 				logging.warn(str(e))
 				time.sleep(10);
 
-	def ponged(self, pong):
-		logging.debug('ponged: ' + pong)
-		super(JenkinsClient, self).ponged()
-
 if __name__ == '__main__':
 
 	config = ConfigParser.ConfigParser()
@@ -118,7 +114,7 @@ if __name__ == '__main__':
 				   config.get('jenkins', 'token'));
 		ws.start()
 		while threading.active_count() > 0 :
-			time.sleep(10)
+			time.sleep(20)
 			ws.ping()
 
 	except (KeyboardInterrupt, SystemExit):
