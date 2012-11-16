@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from ws4py.client.threadedclient import WebSocketClient
-#from output import Ampel
-from output import Console
+from output import Ampel
+#from output import Console
 import threading, time, json, urllib2, base64, ConfigParser, socket, logging
 
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.DEBUG)
@@ -101,8 +101,8 @@ if __name__ == '__main__':
 	config = ConfigParser.ConfigParser()
 	config.read('config.ini')
 	
-	#output = Ampel()
-	output = Console()
+	output = Ampel()
+	#output = Console()
 
 	try:
 		ws = JenkinsClient(output,
