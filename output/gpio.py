@@ -8,7 +8,7 @@ from output import Output
 import RPi.GPIO as GPIO
 import time
 
-class Ampel(Output):
+class GPIO(Output):
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(11, GPIO.OUT)
@@ -23,7 +23,7 @@ class Ampel(Output):
         GPIO.output(13, GPIO.HIGH)
         time.sleep(1)
         GPIO.output(13, GPIO.LOW)
-        super(Ampel, self).__init__()
+        super(GPIO, self).__init__()
         
     def setState(self, states):
         # turn all LEDs off
