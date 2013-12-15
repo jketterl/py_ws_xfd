@@ -40,6 +40,9 @@ var start = function(){
                     title:'Servers',
                     layout:'border',
                     items:[serverList, serverForm]
+                },{
+                    title:'About',
+                    html:'TODO: Some version should go here'
                 }]
         })]
     });
