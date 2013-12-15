@@ -6,6 +6,8 @@ var start = function(){
         }
     });
 
+    Ext.tip.QuickTipManager.init();
+
     var serverList = Ext.create('xfd.ServerList', {
         region:'west',
         split:true,
@@ -29,7 +31,7 @@ var start = function(){
         layout:'fit',
         items:[Ext.create('Ext.tab.Panel', {
             items:[{
-                    title:'Projects'
+                    title:'Jobs'
                 },{
                     title:'Servers',
                     layout:'border',
