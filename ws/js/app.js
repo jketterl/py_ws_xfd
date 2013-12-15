@@ -8,6 +8,10 @@ var start = function(){
 
     Ext.tip.QuickTipManager.init();
 
+    Ext.require('xfd.socket.Socket', function(){
+        xfd.socket.Socket.getInstance().connect();
+    });
+
     var serverList = Ext.create('xfd.ServerList', {
         region:'west',
         split:true,

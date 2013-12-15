@@ -1,4 +1,5 @@
 Ext.define('xfd.Server', {
+    requires:['xfd.data.proxy.Socket'],
     extend:'Ext.data.Model',
     fields:[
         {name:'name', type:'String'},
@@ -8,5 +9,9 @@ Ext.define('xfd.Server', {
         {name:'https', type:'Boolean', defaultValue:false},
         {name:'user', type:'String'},
         {name:'token', type:'String'}
-    ]
+    ],
+    proxy:{
+        type:'socket',
+        module:'serverList'
+    }
 });
