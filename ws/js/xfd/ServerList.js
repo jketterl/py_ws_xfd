@@ -1,6 +1,9 @@
 Ext.define('xfd.ServerList', {
     extend:'Ext.grid.Panel',
-    model:'xfd.Server',
+    requires:['xfd.Server'],
+    store:{
+        model:'xfd.Server'
+    },
     columns:[
         {header:'Name', dataIndex:'name', flex:1}
     ],
@@ -29,6 +32,10 @@ Ext.define('xfd.ServerList', {
                 }
             }]
         }];
+
+        me.on('render', function(){
+            me.getStore().load();
+        });
 
         me.callParent(arguments);
     }

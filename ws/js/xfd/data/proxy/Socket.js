@@ -13,12 +13,26 @@ Ext.define('xfd.data.proxy.Socket', {
         var me = this, 
             record = operation.getRecords()[0],
             command = Ext.create('xfd.socket.Command', 'add', me.module, record.getData(), function(command){
-            operation.setSuccessful(command.wasSuccessful());
-            operation.setCompleted();
-            if (command.wasSuccessful()) record.set(command.getResult());
+                operation.setSuccessful(command.wasSuccessful());
+                operation.setCompleted();
+                if (command.wasSuccessful()) record.set(command.getResult());
 
-            Ext.callback(callback, scope || me, [operation]);
-        });
-        this.socket.sendCommand(command);
+                Ext.callback(callback, scope || me, [operation]);
+            });
+        me.socket.sendCommand(command);
+    },
+    read:function(operation, callback, scope){
+        var me = this,
+            command = Ext.create('xfd.socket.Command', 'read', me.module, {}, function(command) {
+                operation.setCompleted();
+                if (command.wasSuccessful()) {
+                    var result = operation.resultSet = me.getReader().read(command.getResult());
+                    if (result.success) operation.setSuccessful();
+                } else {
+                    me.fireEvent('exception', me, null, operation);
+                }
+                Ext.callback(callback, scope || me, [operation]);
+            });
+        me.socket.sendCommand(command);
     }
 });

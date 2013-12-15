@@ -18,7 +18,7 @@ Ext.define('xfd.socket.Command', {
 		return JSON.stringify(data);
 	},
 	updateResult:function(data){
-		this.success = data.success || false;
+		this.success = data.status && data.status == 'OK';
 		this.result = data.data || {};
 		this.callback(this);
 	},
