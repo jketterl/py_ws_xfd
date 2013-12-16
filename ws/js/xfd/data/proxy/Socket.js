@@ -48,5 +48,20 @@ Ext.define('xfd.data.proxy.Socket', {
     },
     update:function(operation, callback, scope){
         return this.updateOperation(operation, 'write', callback, scope);
+    },
+    destroy:function(operation, callback, scope){
+        var me = this,
+            record = operation.getRecords()[0],
+            command = Ext.create('xfd.socket.Command', 'delete', me.module, {id:record.get('id')}, function(command){
+                operation.setCompleted();
+                if (command.wasSuccessful()) {
+                    operation.setSuccessful();
+                } else {
+                    me.fireEvent('exception', me, null, operation);
+                }
+
+                Ext.callback(callback, scope || me, [operation]);
+            });
+        me.socket.sendCommand(command);
     }
 });

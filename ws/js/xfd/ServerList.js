@@ -5,7 +5,6 @@ Ext.define('xfd.ServerList', {
         model:'xfd.Server'
     },
     columns:[
-        {header:'ID', dataIndex:'id'},
         {header:'Name', dataIndex:'name', flex:1}
     ],
     initComponent:function(){
@@ -29,7 +28,11 @@ Ext.define('xfd.ServerList', {
                 handler:function(){
                     var selection = me.getSelectionModel().getSelection();
                     if (!selection[0]) return;
-                    me.store.remove(selection[0]);
+                    selection[0].destroy({
+                        callback:function(records, operation){
+                            if (operation.wasSuccessful()) me.getStore().remove(selection[0]);
+                        }
+                    });
                 }
             }]
         }];

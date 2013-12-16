@@ -53,6 +53,11 @@ class List(Controllable):
         object.apply(**kwargs)
         self._write()
         return object._json()
+    def delete(self, **kwargs):
+        if not "id" in kwargs: raise Exception("record could not be identified")
+        object = self.findById(kwargs["id"])
+        self.objects.remove(object)
+        self._write()
 
 class ServerList(List):
     def getId(self):
