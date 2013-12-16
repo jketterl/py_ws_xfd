@@ -31,19 +31,24 @@ var start = function(){
         serverForm.enable();
     });
 
+    var jobList = Ext.create('xfd.JobList', {
+        title:'Jobs'
+    });
+
     var viewport = Ext.create('Ext.container.Viewport', {
         layout:'fit',
         items:[Ext.create('Ext.tab.Panel', {
-            items:[{
-                    title:'Jobs'
-                },{
+            items:[
+                jobList,
+                {
                     title:'Servers',
                     layout:'border',
                     items:[serverList, serverForm]
                 },{
                     title:'About',
                     html:'TODO: Some version should go here'
-                }]
+                }
+            ]
         })]
     });
 };

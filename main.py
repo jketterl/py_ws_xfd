@@ -106,7 +106,9 @@ if __name__ == '__main__':
     config = ConfigParser.ConfigParser()
     config.read('config.ini')
 
-    serverList = jenkins.ServerList("servers.json")
+    # initialize component lists
+    jenkins.ServerList("servers.json")
+    jenkins.JobList("jobs.json")
     
     output = Output.factory(config.get('output', 'type'))
 

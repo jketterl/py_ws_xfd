@@ -1,10 +1,7 @@
 from control import Controllable
 import json
 
-class Server(object):
-    fields = [ "id", "name", "host", "port", "wsPort", "https", "user", "token" ]
-    host = ""
-    port = 8080
+class Storable(object):
     def __init__(self, **kwargs):
         self.apply(**kwargs)
     def _json(self):
@@ -16,19 +13,28 @@ class Server(object):
         for key in self.fields:
             if key in kwargs: setattr(self, key, kwargs[key])
 
+class Server(Storable):
+    fields = [ "id", "name", "host", "port", "wsPort", "https", "user", "token" ]
+
+class Job(Storable):
+    fields = [ "id", "name", "server_id" ]
+
 class List(Controllable):
-    objects = []
-    idSequence = 0
     def __init__(self, serverFile):
+        self.objects = []
+        self.idSequence = 0
         self.serverFile = serverFile
-        f = open(self.serverFile, "r")
-        input = json.loads(f.read())
-        for rec in input:
-            if "id" in rec and rec["id"] > self.idSequence: self.idSequence = rec["id"]
-        for rec in input:
-            if not "id" in rec:
-                rec["id"] = self.getNextSequence()
-            self.objects.append(Server(**rec)) 
+        try:
+            f = open(self.serverFile, "r")
+            input = json.loads(f.read())
+            for rec in input:
+                if "id" in rec and rec["id"] > self.idSequence: self.idSequence = rec["id"]
+            for rec in input:
+                if not "id" in rec:
+                    rec["id"] = self.getNextSequence()
+                self.objects.append(Server(**rec)) 
+        except IOError:
+            pass
         super(List, self).__init__()
     def _json(self):
         out = []
@@ -58,13 +64,19 @@ class List(Controllable):
         object = self.findById(kwargs["id"])
         self.objects.remove(object)
         self._write()
-
-class ServerList(List):
-    def getId(self):
-        return "serverList"
     def add(self, *args, **kwargs):
         kwargs["id"] = self.getNextSequence()
-        server = Server(**kwargs)
+        server = self.constructor(**kwargs)
         self.objects.append(server)
         self._write()
         return server._json()
+
+class ServerList(List):
+    constructor = Server
+    def getId(self):
+        return "serverList"
+
+class JobList(List):
+    constructor = Job
+    def getId(self):
+        return "jobList"
