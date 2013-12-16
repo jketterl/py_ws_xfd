@@ -41,11 +41,14 @@ Ext.define('xfd.ServerForm', {
                 xtype:'button',
                 text:'Save',
                 handler:function(){
-                    var form = me.getForm();
+                    var form = me.getForm(),
+                        record = form.getRecord();
                     form.updateRecord();
-                    form.getRecord().save({
-                        callback:function(){
-                            form.getRecord().commit();
+                    record.save({
+                        callback:function(records, operation){
+                            if (operation.wasSuccessful()) {
+                                record.commit();
+                            }
                         }
                     });
                 }

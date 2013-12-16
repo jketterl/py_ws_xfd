@@ -10,12 +10,23 @@ Ext.define('xfd.data.proxy.Socket', {
         this.socket = this.socket || xfd.socket.Socket.getInstance();
     },
     create:function(operation, callback, scope){
+        return this.updateOperation(operation, 'add', callback, scope);
+    },
+    updateOperation:function(operation, method,  callback, scope){
         var me = this, 
             record = operation.getRecords()[0],
-            command = Ext.create('xfd.socket.Command', 'add', me.module, record.getData(), function(command){
-                operation.setSuccessful(command.wasSuccessful());
+            request = Ext.create('Ext.data.Request', {
+                operation:operation
+            }),
+            data = me.getWriter().write(request).jsonData,
+            command = Ext.create('xfd.socket.Command', method, me.module, data, function(command){
                 operation.setCompleted();
-                if (command.wasSuccessful()) record.set(command.getResult());
+                if (command.wasSuccessful()) {
+                    operation.setSuccessful();
+                    record.set(command.getResult());
+                } else {
+                    me.fireEvent('exception', me, null, operation);
+                }
 
                 Ext.callback(callback, scope || me, [operation]);
             });
@@ -34,5 +45,8 @@ Ext.define('xfd.data.proxy.Socket', {
                 Ext.callback(callback, scope || me, [operation]);
             });
         me.socket.sendCommand(command);
+    },
+    update:function(operation, callback, scope){
+        return this.updateOperation(operation, 'write', callback, scope);
     }
 });

@@ -5,6 +5,7 @@ Ext.define('xfd.ServerList', {
         model:'xfd.Server'
     },
     columns:[
+        {header:'ID', dataIndex:'id'},
         {header:'Name', dataIndex:'name', flex:1}
     ],
     initComponent:function(){
