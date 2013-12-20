@@ -1,9 +1,10 @@
 from control import Controllable
-import json
+import json, uuid, urllib2
 
 class Storable(object):
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.apply(**kwargs)
+        super(Storable, self).__init__(*args, **kwargs)
     def _json(self):
         result = {}
         for key in self.fields:
@@ -13,8 +14,16 @@ class Storable(object):
         for key in self.fields:
             if key in kwargs: setattr(self, key, kwargs[key])
 
-class Server(Storable):
-    fields = [ "id", "name", "host", "port", "wsPort", "https", "user", "token" ]
+class Server(Storable, Controllable):
+    fields = [ "id", "name", "host", "port", "wsPort", "https", "user", "token", "uuid" ]
+    def __init__(self, *args, **kwargs):
+        if not "uuid" in kwargs or kwargs["uuid"] == "": kwargs["uuid"] = str(uuid.uuid4())
+        super(Server, self).__init__(*args, **kwargs)
+    def getId(self):
+        return self.uuid
+    def read(self, **kwargs):
+        url = "http" + ("s" if self.https else "") + "://" + self.host + ":" + str(self.port) + "/api/json"
+        return json.loads(urllib2.urlopen(url).read())
 
 class Job(Storable):
     fields = [ "id", "name", "server_id" ]

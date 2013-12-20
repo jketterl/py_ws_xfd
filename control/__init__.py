@@ -42,7 +42,6 @@ class ControlSocket(websocket.WebSocketHandler):
         
 class Controllable(object):
     def __init__(self, *args, **kwargs):
-        super(Controllable, self).__init__(*args, **kwargs)
         ControlServer.getInstance().registerControllable(self)
         self.listeners = []
     def executeCommand(self, command, **kwargs):

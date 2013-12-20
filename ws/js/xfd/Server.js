@@ -1,5 +1,8 @@
 Ext.define('xfd.Server', {
-    requires:['xfd.data.proxy.Socket'],
+    requires:[
+        'xfd.data.proxy.Socket',
+        'xfd.JenkinsJob'
+    ],
     extend:'Ext.data.Model',
     fields:[
         {name:'id', type:'Integer'},
@@ -9,10 +12,26 @@ Ext.define('xfd.Server', {
         {name:'wsPort', type:'Integer', defaultValue:8081},
         {name:'https', type:'Boolean', defaultValue:false},
         {name:'user', type:'String'},
-        {name:'token', type:'String'}
+        {name:'token', type:'String'},
+        {name:'uuid', type:'String'}
     ],
     proxy:{
         type:'socket',
         module:'serverList'
+    },
+    getJobs:function(){
+        var store = Ext.create('Ext.data.Store', {
+            model:'xfd.JenkinsJob',
+            proxy:{
+                type:'socket',
+                module:this.get('uuid'),
+                reader:{
+                    type:'json',
+                    root:'jobs'
+                }
+            }
+        });
+        store.load();
+        return store;
     }
 });
