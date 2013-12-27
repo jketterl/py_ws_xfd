@@ -2,7 +2,14 @@ from RPi import GPIO
 import time
 import subprocess
 
+enabled = False
+
 def enableAccessPoint():
+  global enabled
+  if enabled:
+    print "already enabled"
+    return
+  enabled = True
   print "enabling access point..."
   subprocess.call(['/sbin/ifdown', 'wlan0'])
   subprocess.call(['/sbin/ifconfig', 'wlan0', '192.168.99.1'])
@@ -10,6 +17,11 @@ def enableAccessPoint():
   subprocess.call(['/usr/sbin/service', 'isc-dhcp-server', 'start'])
 
 def disableAccessPoint():
+  global enabled
+  if not enabled:
+    print "already disabled"
+    return
+  enabled = False
   print "disabling access point..."
   subprocess.call(['/usr/sbin/service', 'isc-dhcp-server', 'stop'])
   f = open('/home/pi/hostapd.pid', 'r')
