@@ -10,11 +10,11 @@ class Pca9685(Output):
 
         self.pwm = PWM(0x40, False)
         self.pwm.setPWMFreq(600)
-        for i in range(0, 10):
+        for i in range(0, len(self.leds)):
             for k in range(0, 4095, 256):
-                self.pwm.setPWM(i, 0, k)
+                self.pwm.setPWM(self.offset + i, 0, k)
                 time.sleep(.02)
-            self.pwm.setPWM(i, 0, 0)
+            self.pwm.setPWM(self.offset + i, 0, 0)
         super(Pca9685, self).__init__(*args, **kwargs)
 
     def setState(self, states):
@@ -27,8 +27,8 @@ class Pca9685(Output):
             elif state == 'FAILURE':
                 channels.append(0)
         for i in range(3):
-            self.pwm.setPWM(i, 0, 4095 if i in channels else 0) 
+            self.pwm.setPWM(self.offset + i, 0, 4095 if i in channels else 0) 
 
     def shutdown(self):
         for i in range(10):
-            self.pwm.setPWM(i, 0, 0)
+            self.pwm.setPWM(self.offset + i, 0, 0)
