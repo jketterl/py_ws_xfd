@@ -4,7 +4,8 @@ Ext.define('xfd.Job', {
     fields:[
         {name:'id', type:'integer'},
         {name:'name', type:'string'},
-        {name:'server_id', type:'integer'}
+        {name:'server_id', type:'integer'},
+        {name:'output_id', type:'ingeger'}
     ],
     proxy:{
         type:'socket',

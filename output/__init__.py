@@ -1,4 +1,8 @@
-class Output(object):
+from control import Storable
+
+class Output(Storable):
+    fields = ['id', 'name']
+
     def shutdown(self):
         pass
     
@@ -6,7 +10,7 @@ class Output(object):
         pass
     
     @staticmethod
-    def factory(classname):
+    def factory(classname, *args, **kwargs):
         mod = __import__("output.%s" % classname.lower(), fromlist=[classname.capitalize()])
         cls = getattr(mod, classname.capitalize())
-        return cls()
+        return cls(*args, **kwargs)

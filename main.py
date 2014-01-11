@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from ws4py.client.threadedclient import WebSocketClient
-from output import Output
 import threading, time, json, urllib2, base64, ConfigParser, socket, logging, control
 
 import jenkins
@@ -109,8 +108,9 @@ if __name__ == '__main__':
     # initialize component lists
     jenkins.ServerList("servers.json")
     jenkins.JobList("jobs.json")
+    jenkins.OutputList("outputs.json")
     
-    output = Output.factory(config.get('output', 'type'))
+    #output = Output.factory(config.get('output', 'type'))
 
     try:
         ws = JenkinsClient(output,

@@ -2,7 +2,8 @@ Ext.define('xfd.JobForm', {
     extend:'Ext.form.Panel',
     requires:[
         'xfd.Server',
-        'xfd.JenkinsJob'
+        'xfd.JenkinsJob',
+        'xfd.Output'
     ],
     defaults:{ width: 400, labelWidth:120 },
     items:[{
@@ -30,6 +31,16 @@ Ext.define('xfd.JobForm', {
             valueField:'name'
         });
 
+        var outputCombo = Ext.create('Ext.form.field.ComboBox', {
+            fieldLabel:'Output',
+            name:'output_id',
+            valueField:'id',
+            displayField:'name',
+            store:{
+                model:'xfd.Output'
+            }
+        });
+
         serverCombo.on('select', function(combo, records){
             var server = records[0];
             jobCombo.bindStore(server.getJobs());
@@ -37,7 +48,8 @@ Ext.define('xfd.JobForm', {
 
         me.items = [
             serverCombo,
-            jobCombo
+            jobCombo,
+            outputCombo
         ];
 
         me.dockedItems = [{

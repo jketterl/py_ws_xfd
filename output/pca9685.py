@@ -4,7 +4,10 @@ sys.path.append('../Adafruit-Raspberry-Pi-Python-Code/Adafruit_PWM_Servo_Driver'
 from Adafruit_PWM_Servo_Driver import PWM
 
 class Pca9685(Output):
-    def __init__(self):
+    def __init__(self, offset, leds, *args, **kwargs):
+        self.offset = offset
+        self.leds = leds
+
         self.pwm = PWM(0x40, False)
         self.pwm.setPWMFreq(600)
         for i in range(0, 10):
@@ -12,7 +15,7 @@ class Pca9685(Output):
                 self.pwm.setPWM(i, 0, k)
                 time.sleep(.02)
             self.pwm.setPWM(i, 0, 0)
-        super(Pca9685, self).__init__()
+        super(Pca9685, self).__init__(*args, **kwargs)
 
     def setState(self, states):
         channels = []
