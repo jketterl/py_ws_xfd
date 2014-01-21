@@ -9,6 +9,7 @@ Ext.define('xfd.Server', {
         {name:'name', type:'String'},
         {name:'host', type:'String'},
         {name:'port', type:'Integer', defaultValue:8080},
+        {name:'urlPrefix', type:'string'},
         {name:'wsPort', type:'Integer', defaultValue:8081},
         {name:'https', type:'Boolean', defaultValue:false},
         {name:'user', type:'String'},

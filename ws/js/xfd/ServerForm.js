@@ -15,6 +15,10 @@ Ext.define('xfd.ServerForm', {
         name:'port',
         hideTrigger:true
     }, {
+        xtype:'textfield',
+        fieldLabel:'URL-Prefix',
+        name:'urlPrefix'
+    }, {
         xtype:'numberfield',
         fieldLabel:'WebSocket Port <img src="img/icons/information.png" data-qtip="Installation of the Jenkins WebSocket plugin is strongly recommended, since it allows direct push of project status changes.">',
         name:'wsPort',

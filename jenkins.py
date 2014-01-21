@@ -3,14 +3,14 @@ import json, uuid, urllib2
 from output import Output
 
 class Server(Storable, Controllable):
-    fields = [ "id", "name", "host", "port", "wsPort", "https", "user", "token", "uuid" ]
+    fields = [ "id", "name", "host", "port", "urlPrefix", "wsPort", "https", "user", "token", "uuid" ]
     def __init__(self, *args, **kwargs):
         if not "uuid" in kwargs or kwargs["uuid"] == "": kwargs["uuid"] = str(uuid.uuid4())
         super(Server, self).__init__(*args, **kwargs)
     def getId(self):
         return self.uuid
     def read(self, **kwargs):
-        url = "http" + ("s" if self.https else "") + "://" + self.host + ":" + str(self.port) + "/api/json"
+        url = "http" + ("s" if self.https else "") + "://" + self.host + ":" + str(self.port) + "/" + self.urlPrefix + "/api/json"
         return json.loads(urllib2.urlopen(url).read())
 
 class Job(Storable):
