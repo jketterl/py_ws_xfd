@@ -150,6 +150,8 @@ class List(Controllable):
         f = open(self.storageFile, "w")
         f.write(json.dumps(self._json()))
         f.close()
+    def all(self):
+        return self.objects
     def getNextSequence(self):
         self.idSequence += 1;
         return self.idSequence

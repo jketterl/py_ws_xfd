@@ -16,12 +16,22 @@ class Blinker(threading.Thread):
             Blinker._instance.start()
         return Blinker._instance
 
+    @staticmethod
+    def addChannel(channel):
+        return Blinker.getInstance()._addChannel(channel)
+
+    @staticmethod
+    def removeChannel(channel):
+        if Blinker._instance == None: return
+        return Blinker.getInstance()._removeChannel(channel)
+
     def __init__(self):
         super(Blinker, self).__init__()
         self.channels = []
+        self.doRun = True
 
     def run(self):
-        while(True):
+        while(self.doRun):
             for i in range(0, 4095, 256):
                 self.setOutputs(i)
                 time.sleep(.05)
@@ -29,12 +39,21 @@ class Blinker(threading.Thread):
                 self.setOutputs(i)
                 time.sleep(.05)
 
+    def stop(self):
+        self.doRun = False
+        Blinker._instance = None
+
     def setOutputs(self, value):
         for output in self.channels:
             pwm.setPWM(output, 0, value)
 
-    def addChannel(self, channel):
+    def _addChannel(self, channel):
         self.channels.append(channel)
+
+    def _removeChannel(self, channel):
+        if not channel in self.channels: return
+        self.channels.remove(channel)
+        if len(self.channels) == 0: self.stop()
 
 class Pca9685(Output):
     def __init__(self, offset, leds, *args, **kwargs):
@@ -73,13 +92,15 @@ class Pca9685(Output):
             else:
                 out[self.leds[led]] = 'ON'
         for index, value in enumerate(out):
+            Blinker.removeChannel(self.offset + index)
             if value == "ON":
                 pwm.setPWM(self.offset + index, 0, 4095) 
             elif value == "BLINK":
-                Blinker.getInstance().addChannel(self.offset + index)
+                Blinker.addChannel(self.offset + index)
             else:
                 pwm.setPWM(self.offset + index, 0, 0)
 
     def shutdown(self):
-        for i in range(10):
+        for i in range(len(self.leds)):
+            Blinker.removeChannel(self.offset + i)
             pwm.setPWM(self.offset + i, 0, 0)

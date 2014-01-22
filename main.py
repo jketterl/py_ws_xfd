@@ -110,24 +110,14 @@ if __name__ == '__main__':
     outputList = jenkins.OutputList("outputs.json")
     jenkins.JobList("jobs.json", serverList, outputList)
     
-    #output = Output.factory(config.get('output', 'type'))
 
     try:
-        ws = JenkinsClient(output,
-                   config.get('jenkins', 'host'),
-                   config.get('jenkins', 'httpPort'),
-                   config.get('jenkins', 'wsPort'),
-                   config.get('project', 'name').split(','));
-        try:
-            ws.setAuthentication(config.get('jenkins', 'user'), config.get('jenkins', 'token'))
-        except (ConfigParser.NoOptionError):
-            pass
-        ws.start()
-        while threading.active_count() > 0 :
+
+        while threading.active_count() > 1 :
             time.sleep(20)
 
     except (KeyboardInterrupt, SystemExit):
         logging.info("shutting down")
-        output.shutdown()
         control.ControlServer.getInstance().shutdown()
-        ws.close()
+        for output in outputList.all():
+            output.shutdown()
