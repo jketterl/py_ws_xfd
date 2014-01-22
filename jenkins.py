@@ -24,7 +24,13 @@ class Server(Storable, Controllable):
     def loadCurrentState(self, project):
         url = self.getBaseUrl() + "job/" + project + "/lastBuild/api/json"
         res = json.loads(urllib2.urlopen(url).read())
-        return res['result']
+        if res['result'] != None: return res['result']
+
+        # if the result of the latest build is null, we assume the build to be currently in progress.
+        # download the build before to get the last known result
+        url = self.getBaseUrl() + "job/" + project + "/" + str(res['number'] - 1) + "/api/json"
+        res = json.loads(urllib2.urlopen(url).read())
+        return res['result'] + "_BLINK"
 
 class Job(Storable):
     fields = [ "id", "name", "server_id", "output_id" ]
@@ -32,7 +38,7 @@ class Job(Storable):
         self.output = output
         server.addProjectListener(self.name, self)
     def receiveState(self, state):
-        self.output.setState([state])
+        self.output.setState(self.id, state)
 
 class ServerList(List):
     constructor = Server
