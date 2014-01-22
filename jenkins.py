@@ -1,5 +1,5 @@
 from control import Controllable, Storable, List, Readonly
-import json, uuid, urllib2
+import json, uuid, urllib2, logging
 from output import Output
 
 class Server(Storable, Controllable):
@@ -18,17 +18,17 @@ class Server(Storable, Controllable):
         return "http" + ("s" if self.https else "") + "://" + self.host + ":" + str(self.port) + "/" + self.urlPrefix + "/"
 
     def addProjectListener(self, project, listener):
-        if not project in self.projectListeners: self.projectListeners[project] = []
-        self.projectListeners[project] = listener
+        if not project.name in self.projectListeners: self.projectListeners[project.name] = []
+        self.projectListeners[project.name].append(listener)
         listener.receiveState(self.loadCurrentState(project))
     def loadCurrentState(self, project):
-        url = self.getBaseUrl() + "job/" + project + "/lastBuild/api/json"
+        url = self.getBaseUrl() + "job/" + project.name + "/lastBuild/api/json"
         res = json.loads(urllib2.urlopen(url).read())
         if res['result'] != None: return res['result']
 
         # if the result of the latest build is null, we assume the build to be currently in progress.
         # download the build before to get the last known result
-        url = self.getBaseUrl() + "job/" + project + "/" + str(res['number'] - 1) + "/api/json"
+        url = self.getBaseUrl() + "job/" + project.name + "/" + str(res['number'] - 1) + "/api/json"
         res = json.loads(urllib2.urlopen(url).read())
         return res['result'] + "_BLINK"
 
@@ -36,8 +36,9 @@ class Job(Storable):
     fields = [ "id", "name", "server_id", "output_id" ]
     def wire(self, server, output):
         self.output = output
-        server.addProjectListener(self.name, self)
+        server.addProjectListener(self, self)
     def receiveState(self, state):
+        logging.info("project " + self.name + " received state " + state)
         self.output.setState(self.id, state)
 
 class ServerList(List):
