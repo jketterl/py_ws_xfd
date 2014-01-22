@@ -106,9 +106,9 @@ if __name__ == '__main__':
     config.read('config.ini')
 
     # initialize component lists
-    jenkins.ServerList("servers.json")
-    jenkins.JobList("jobs.json")
-    jenkins.OutputList("outputs.json")
+    serverList = jenkins.ServerList("servers.json")
+    outputList = jenkins.OutputList("outputs.json")
+    jenkins.JobList("jobs.json", serverList, outputList)
     
     #output = Output.factory(config.get('output', 'type'))
 

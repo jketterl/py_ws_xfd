@@ -18,16 +18,12 @@ class Pca9685(Output):
         super(Pca9685, self).__init__(*args, **kwargs)
 
     def setState(self, states):
-        channels = []
+        out = [0] * len(self.leds)
         for state in states:
-            if state == 'SUCCESS':
-                channels.append(2)
-            elif state == 'UNSTABLE':
-                channels.append(1)
-            elif state == 'FAILURE':
-                channels.append(0)
-        for i in range(3):
-            self.pwm.setPWM(self.offset + i, 0, 4095 if i in channels else 0) 
+            if not state in self.leds: continue
+            out[self.leds[state]] = 4095
+        for index, value in enumerate(out):
+            self.pwm.setPWM(self.offset + index, 0, value) 
 
     def shutdown(self):
         for i in range(10):

@@ -1,0 +1,40 @@
+[
+    {
+        "type":"pca9685",
+        "offset":0,
+        "name":"Output 1",
+        "leds":{
+            "FAILURE":0,
+            "UNSTABLE":1,
+            "SUCCESS":2
+        }
+    },
+    {
+        "type":"pca9685",
+        "offset":3,
+        "name":"Output 2",
+        "leds":{
+            "FAILURE":0,
+            "UNSTABLE":1,
+            "SUCCESS":2
+        }
+    },
+    {
+        "type":"pca9685",
+        "offset":6,
+        "name":"Output 3",
+        "leds":{
+            "FAILURE":0,
+            "SUCCESS":1
+        }
+    },
+    {
+        "type":"pca9685",
+        "offset":8,
+        "name":"Output 4",
+        "leds":{
+            "FAILURE":0,
+            "SUCCESS":1
+        }
+    }
+]

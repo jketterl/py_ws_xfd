@@ -137,7 +137,7 @@ class List(Controllable):
             for rec in input:
                 if not "id" in rec:
                     rec["id"] = self.getNextSequence()
-                self.objects.append(self.constructor(**rec))
+                self.addObject(self.constructor(**rec))
         except IOError:
             traceback.print_exc()
             pass
@@ -173,9 +173,11 @@ class List(Controllable):
     def add(self, *args, **kwargs):
         kwargs["id"] = self.getNextSequence()
         ob = self.constructor(**kwargs)
-        self.objects.append(ob)
+        self.addObject(ob)
         self._write()
         return ob._json()
+    def addObject(self, ob):
+        self.objects.append(ob)
 
 class Readonly(object):
     def write(self, **kwargs):
