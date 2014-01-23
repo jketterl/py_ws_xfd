@@ -30,7 +30,7 @@ class Blinker(threading.Thread):
         self.channels = []
         self.doRun = True
 
-        // alpha filter
+        # alpha filter
         self.filterTable = [0] * 16
         for i in range(16):
             self.filterTable[i] = int(round(4095.0 * (i / 15.0) ** 2.2))
