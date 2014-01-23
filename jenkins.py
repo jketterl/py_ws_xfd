@@ -1,7 +1,7 @@
 from control import Controllable, Storable, List, Readonly
 from ws4py.client.threadedclient import WebSocketClient
 from ws4py.exc import WebSocketException
-import json, uuid, urllib2, logging, socket, time, threading
+import json, uuid, urllib2, logging, socket, time, threading, re
 from output import Output
 
 class Server(Storable, Controllable):
@@ -38,10 +38,21 @@ class Server(Storable, Controllable):
 
 class Job(Storable):
     fields = [ "id", "name", "server_id", "output_id" ]
+    def __init__(self, *args, **kwargs):
+        self.state = 'UNKNOWN'
+        super(Job, self).__init__(*args, **kwargs)
     def wire(self, server, output):
         self.output = output
         server.addProjectListener(self, self)
     def receiveState(self, state):
+        if (state == 'BLINK'):
+            state = self.state + '_BLINK'
+
+        pattern = re.compile('^([A-Z]+)(_BLINK)?$')
+        match = pattern.match(state)
+        if not match: return
+        self.state = match.group(1)
+
         logging.info("project " + self.name + " received state " + state)
         self.output.setState(self.id, state)
 
@@ -104,9 +115,10 @@ class JenkinsClient(threading.Thread):
         logging.info("falling back to polling")
 
         while (self.doRun):
-            logging.debug("starting refresh cycle")
+            logging.debug("starting refresh cycle on %s", self.server.name)
             for projectName in self.server.getProjects():
                 self.loadCurrentState(projectName)
+            logging.debug("refresh cycle on %s finished", self.server.name)
             time.sleep(30)
 
     def loadCurrentState(self, projectName):
@@ -141,13 +153,11 @@ class JenkinsClient(threading.Thread):
         self.update(message)
 
     def update(self, message):
-        print message
-        '''
-        if 'project' in message and message['project'] not in self.projects: return
-        if not 'result' in message: return logging.warn("Invalid message on websocket")
-        self.states[message['project']] = message['result']
-        self.output.setState(list(set(self.states.values())))
-        '''
+        if not 'project' in message: return
+        if 'result' in message:
+            self.server.pushResult(message['project'], message['result'])
+        else:
+            self.server.pushResult(message['project'], 'BLINK')
 
     def close(self):
         self.shouldBeOnline = False
