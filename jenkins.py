@@ -110,15 +110,19 @@ class JenkinsClient(threading.Thread):
             time.sleep(30)
 
     def loadCurrentState(self, projectName):
-        url = self.server.getBaseUrl() + "job/" + projectName + "/lastBuild/api/json"
-        res = json.loads(urllib2.urlopen(url).read())
-        if res['result'] != None: return self.server.pushResult(projectName, res['result'])
+        try:
+            url = self.server.getBaseUrl() + "job/" + projectName + "/lastBuild/api/json"
+            res = json.loads(urllib2.urlopen(url).read())
+            if res['result'] != None: return self.server.pushResult(projectName, res['result'])
 
-        # if the result of the latest build is null, we assume the build to be currently in progress.
-        # download the build before to get the last known result
-        url = self.server.getBaseUrl() + "job/" + projectName + "/" + str(res['number'] - 1) + "/api/json"
-        res = json.loads(urllib2.urlopen(url).read())
-        self.server.pushResult(projectName, res['result'] + "_BLINK")
+            # if the result of the latest build is null, we assume the build to be currently in progress.
+            # download the build before to get the last known result
+            url = self.server.getBaseUrl() + "job/" + projectName + "/" + str(res['number'] - 1) + "/api/json"
+            res = json.loads(urllib2.urlopen(url).read())
+            self.server.pushResult(projectName, res['result'] + "_BLINK")
+        except urllib2.HTTPError as e:
+            logging.error("HTTP error occured while trying to refresh project %s", projectName)
+            logging.exception(e)
 
     def getSocket(self):
         if self.socket is None:
