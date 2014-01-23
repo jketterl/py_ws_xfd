@@ -19,26 +19,22 @@ class Server(Storable, Controllable):
     def getBaseUrl(self):
         return "http" + ("s" if self.https else "") + "://" + self.host + ":" + str(self.port) + "/" + self.urlPrefix + "/"
 
+    def getProjects(self):
+        return self.projectListeners.keys()
     def addProjectListener(self, project, listener):
         if not project.name in self.projectListeners: self.projectListeners[project.name] = []
         self.projectListeners[project.name].append(listener)
-        listener.receiveState(self.loadCurrentState(project))
-    def loadCurrentState(self, project):
-        url = self.getBaseUrl() + "job/" + project.name + "/lastBuild/api/json"
-        res = json.loads(urllib2.urlopen(url).read())
-        if res['result'] != None: return res['result']
-
-        # if the result of the latest build is null, we assume the build to be currently in progress.
-        # download the build before to get the last known result
-        url = self.getBaseUrl() + "job/" + project.name + "/" + str(res['number'] - 1) + "/api/json"
-        res = json.loads(urllib2.urlopen(url).read())
-        return res['result'] + "_BLINK"
+        self.ws.loadCurrentState(project.name)
     def apply(self, *args, **kwargs):
-        logging.debug('apply called')
         super(Server, self).apply(*args, **kwargs)
-        self.ws = JenkinsClient(self.host, self.wsPort)
+        self.ws = JenkinsClient(self)
         self.ws.start()
-        logging.debug('apply leaving')
+    def pushResult(self, projectName, result):
+        if not projectName in self.projectListeners:
+            logging.error("%s is not a registered project", projectName)
+            return
+        for listener in self.projectListeners[projectName]:
+            listener.receiveState(result)
 
 class Job(Storable):
     fields = [ "id", "name", "server_id", "output_id" ]
@@ -79,11 +75,11 @@ class OutputList(List, Readonly):
 class JenkinsClient(threading.Thread):
     user = None
     token = None
-    def __init__(self, host, wsPort):
-        self.host = host
-        self.wsPort = wsPort
+    def __init__(self, server):
+        self.server = server
         self.socket = None
         self.shouldBeOnline = False
+        self.doRun = True
         super(JenkinsClient, self).__init__()
 
     def setAuthentication(self, user, token):
@@ -107,9 +103,26 @@ class JenkinsClient(threading.Thread):
 
         logging.info("falling back to polling")
 
+        while (self.doRun):
+            logging.debug("starting refresh cycle")
+            for projectName in self.server.getProjects():
+                self.loadCurrentState(projectName)
+            time.sleep(30)
+
+    def loadCurrentState(self, projectName):
+        url = self.server.getBaseUrl() + "job/" + projectName + "/lastBuild/api/json"
+        res = json.loads(urllib2.urlopen(url).read())
+        if res['result'] != None: return self.server.pushResult(projectName, res['result'])
+
+        # if the result of the latest build is null, we assume the build to be currently in progress.
+        # download the build before to get the last known result
+        url = self.server.getBaseUrl() + "job/" + projectName + "/" + str(res['number'] - 1) + "/api/json"
+        res = json.loads(urllib2.urlopen(url).read())
+        self.server.pushResult(projectName, res['result'] + "_BLINK")
+
     def getSocket(self):
         if self.socket is None:
-            self.socket = JenkinsSocket('ws://' + self.host + ':' + str(self.wsPort) + '/jenkins', self);
+            self.socket = JenkinsSocket('ws://' + self.server.host + ':' + str(self.server.wsPort) + '/jenkins', self);
             self.socket.start()
         return self.socket
 
