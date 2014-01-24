@@ -164,13 +164,13 @@ class List(Controllable):
     def write(self, **kwargs):
         if not "id" in kwargs: raise Exception("record could not be identified")
         object = self.findById(kwargs["id"])
-        object.apply(**kwargs)
+        self.updateObject(object, **kwargs)
         self._write()
         return object._json()
     def delete(self, **kwargs):
         if not "id" in kwargs: raise Exception("record could not be identified")
         object = self.findById(kwargs["id"])
-        self.objects.remove(object)
+        self.removeObject(object)
         self._write()
     def add(self, *args, **kwargs):
         kwargs["id"] = self.getNextSequence()
@@ -178,8 +178,12 @@ class List(Controllable):
         self.addObject(ob)
         self._write()
         return ob._json()
-    def addObject(self, ob):
-        self.objects.append(ob)
+    def addObject(self, obj):
+        self.objects.append(obj)
+    def updateObject(self, obj, **kwargs):
+        obj.apply(**kwargs)
+    def removeObject(self, obj):
+        self.objects.remove(obj)
 
 class Readonly(object):
     def write(self, **kwargs):

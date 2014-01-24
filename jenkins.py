@@ -25,7 +25,11 @@ class Server(Storable, Controllable):
         if not project.name in self.projectListeners: self.projectListeners[project.name] = []
         self.projectListeners[project.name].append(listener)
         self.ws.loadCurrentState(project.name)
+    def removeProjectListener(self, project, listener):
+        if not project.name in self.projectListeners: return
+        self.projectListeners[project.name].remove(listener)
     def apply(self, *args, **kwargs):
+        if hasattr(self, "ws"): self.ws.stop()
         super(Server, self).apply(*args, **kwargs)
         self.ws = JenkinsClient(self)
         self.ws.start()
@@ -42,8 +46,13 @@ class Job(Storable):
         self.state = 'UNKNOWN'
         super(Job, self).__init__(*args, **kwargs)
     def wire(self, server, output):
+        self.unwire()
         self.output = output
+        self.server = server
         server.addProjectListener(self, self)
+    def unwire(self):
+        if hasattr(self, "server"): self.server.removeProjectListener(self, self)
+        self.output = None
     def receiveState(self, state):
         if (state == 'BLINK'):
             state = self.state + '_BLINK'
@@ -54,6 +63,7 @@ class Job(Storable):
         self.state = match.group(1)
 
         logging.info("project " + self.name + " received state " + state)
+        if self.output is None: return
         self.output.setState(self.id, state)
 
 class ServerList(List):
@@ -69,11 +79,19 @@ class JobList(List):
         super(JobList, self).__init__(file)
     def getId(self):
         return "jobList"
-    def addObject(self, job):
-        super(JobList, self).addObject(job)
+    def rewireJob(self, job):
         server = self.serverList.findById(job.server_id)
         output = self.outputList.findById(job.output_id)
         job.wire(server, output)
+    def addObject(self, job):
+        super(JobList, self).addObject(job)
+        self.rewireJob(job)
+    def updateObject(self, job, **kwargs):
+        super(JobList, self).updateObject(job, **kwargs)
+        self.rewireJob(job)
+    def removeObject(self, job):
+        super(JobList, self).removeObject(job)
+        job.unwire()
 
 class OutputList(List, Readonly):
     def constructor(self, **kwargs):
@@ -90,7 +108,6 @@ class JenkinsClient(threading.Thread):
         self.server = server
         self.socket = None
         self.shouldBeOnline = False
-        self.doRun = True
         super(JenkinsClient, self).__init__()
 
     def setAuthentication(self, user, token):
@@ -114,7 +131,7 @@ class JenkinsClient(threading.Thread):
 
         logging.info("falling back to polling")
 
-        while (self.doRun):
+        while (self.shouldBeOnline):
             logging.debug("starting refresh cycle on %s", self.server.name)
             for projectName in self.server.getProjects():
                 self.loadCurrentState(projectName)
@@ -159,7 +176,7 @@ class JenkinsClient(threading.Thread):
         else:
             self.server.pushResult(message['project'], 'BLINK')
 
-    def close(self):
+    def stop(self):
         self.shouldBeOnline = False
         if self.socket is None: return
         self.socket.close()
