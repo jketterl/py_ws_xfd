@@ -91,7 +91,7 @@ class Pca9685(Output):
             match = pattern.match(state)
             if not match: continue
             led = match.group(1)
-            if not led in self.leds: continue
+            if not led in self.leds: led = 'FAILURE'
             if match.group(2) == "_BLINK":
                 out[self.leds[led]] = 'BLINK'
             else:
