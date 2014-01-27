@@ -117,7 +117,7 @@ class JenkinsClient(threading.Thread):
     def run(self):
         retries = 0
         self.shouldBeOnline = True
-        while (retries < 5):
+        while (retries < 5 and self.shouldBeOnline):
             try:
                 self.getSocket()
                 # reset retry counter on success
@@ -129,7 +129,7 @@ class JenkinsClient(threading.Thread):
                 #logging.exception(wse)
                 time.sleep(10)
 
-        logging.info("falling back to polling")
+        if self.shouldBeOnline: logging.info("falling back to polling")
 
         while (self.shouldBeOnline):
             logging.debug("starting refresh cycle on %s", self.server.name)
@@ -149,7 +149,7 @@ class JenkinsClient(threading.Thread):
             url = self.server.getBaseUrl() + "job/" + projectName + "/" + str(res['number'] - 1) + "/api/json"
             res = json.loads(urllib2.urlopen(url).read())
             self.server.pushResult(projectName, res['result'] + "_BLINK")
-        except urllib2.HTTPError as e:
+        except urllib2.URLError as e:
             logging.error("HTTP error occured while trying to refresh project %s", projectName)
             logging.exception(e)
 

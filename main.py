@@ -24,3 +24,5 @@ if __name__ == '__main__':
         control.ControlServer.getInstance().shutdown()
         for output in outputList.all():
             output.shutdown()
+        for server in serverList.all():
+            server.ws.stop()
