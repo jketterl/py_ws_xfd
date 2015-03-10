@@ -152,6 +152,9 @@ class JenkinsClient(threading.Thread):
         except urllib2.URLError as e:
             logging.error("HTTP error occured while trying to refresh project %s", projectName)
             logging.exception(e)
+        except Exception as e:
+            logging.error("Caught exception while refreshing project %s", projectName)
+            logging.exception(e)
 
     def getSocket(self):
         if self.socket is None:
