@@ -41,6 +41,8 @@ class ControlSocket(websocket.WebSocketHandler):
             l.onClose(self)
     def addListener(self, listener):
         self.listeners.append(listener);
+    def check_origin(self, origin):
+        return True
         
 class Controllable(object):
     def __init__(self, *args, **kwargs):
