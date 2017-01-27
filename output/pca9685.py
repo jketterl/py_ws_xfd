@@ -3,7 +3,7 @@ import sys, time, threading, re
 sys.path.append('../Adafruit-Raspberry-Pi-Python-Code/Adafruit_PWM_Servo_Driver')
 from Adafruit_PWM_Servo_Driver import PWM
 
-pwm = PWM(0x40, False)
+pwm = PWM(0x40, False, bus=1)
 pwm.setPWMFreq(600)
 
 class Blinker(threading.Thread):
