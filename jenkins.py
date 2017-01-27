@@ -117,17 +117,20 @@ class JenkinsClient(threading.Thread):
     def run(self):
         retries = 0
         self.shouldBeOnline = True
-        while (retries < 5 and self.shouldBeOnline):
-            try:
-                self.getSocket()
-                # reset retry counter on success
-                retries = 0
-            except WebSocketException as wse:
-                self.socket = None
-                retries += 1
-                logging.error("websocket connection failed (%d retries)", retries)
-                #logging.exception(wse)
-                time.sleep(10)
+        if self.server.wsPort != 0:
+            while (retries < 5 and self.shouldBeOnline):
+                try:
+                    self.getSocket()
+                    # reset retry counter on success
+                    retries = 0
+                except WebSocketException as wse:
+                    self.socket = None
+                    retries += 1
+                    logging.error("websocket connection failed (%d retries)", retries)
+                    #logging.exception(wse)
+                    time.sleep(10)
+        else:
+            logging.info("no websocket port given")
 
         if self.shouldBeOnline: logging.info("falling back to polling")
 
