@@ -1,12 +1,13 @@
-'''
+"""
 Created on Nov 12, 2012
 
 @author: jketterl
-'''
+"""
 
 from output import Output
 import RPi.GPIO as GPIO
 import time
+
 
 class GPIO(Output):
     def __init__(self):

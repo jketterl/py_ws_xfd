@@ -1,10 +1,11 @@
 from output import Output
-import sys, time, threading, re
-sys.path.append('../Adafruit-Raspberry-Pi-Python-Code/Adafruit_PWM_Servo_Driver')
-from Adafruit_PWM_Servo_Driver import PWM
+import time
+import threading
+import re
+from board import SCL, SDA
+import busio
+from adafruit_pca9685 import PCA9685
 
-pwm = PWM(0x40, False, bus=1)
-pwm.setPWMFreq(600)
 
 class Blinker(threading.Thread):
     _instance = None
@@ -60,6 +61,11 @@ class Blinker(threading.Thread):
         self.channels.remove(channel)
         if len(self.channels) == 0: self.stop()
 
+
+pwm = PCA9685(busio.I2C(SCL, SDA))
+pwm.setPWMFreq(600)
+
+
 class Pca9685(Output):
     def __init__(self, offset, leds, *args, **kwargs):
         self.offset = offset
@@ -76,6 +82,7 @@ class Pca9685(Output):
     def setState(self, projectId, state):
         self.states[projectId] = state
         self._setState(self.getUniqueStates())
+
     def getUniqueStates(self):
         out = []
         for id in self.states:

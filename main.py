@@ -1,6 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import threading, time, logging, control
+import threading
+import time
+import logging
+import control
 
 import jenkins
 
@@ -12,11 +15,9 @@ if __name__ == '__main__':
     serverList = jenkins.ServerList("servers.json")
     outputList = jenkins.OutputList("outputs.json")
     jenkins.JobList("jobs.json", serverList, outputList)
-    
 
     try:
-
-        while threading.active_count() > 1 :
+        while threading.active_count() > 1:
             time.sleep(20)
 
     except (KeyboardInterrupt, SystemExit):

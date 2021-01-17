@@ -1,12 +1,13 @@
 from control import Storable
 
+
 class Output(Storable):
     fields = ['id', 'name']
 
     def shutdown(self):
         pass
     
-    def setState(self, state):
+    def setState(self, projectId, state):
         pass
     
     @staticmethod

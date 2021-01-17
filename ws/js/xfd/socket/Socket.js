@@ -18,7 +18,20 @@ Ext.define('xfd.socket.Socket', {
 		var me = this;
 		if (!me.socket) {
 			console.info('connecting to server');
-			me.socket = new WebSocket('ws://' + top.location.host + ':81/socket');
+            var protocol = window.location.protocol.match(/https/) ? 'wss' : 'ws';
+
+            var href = window.location.href;
+            var index = href.lastIndexOf('/');
+            if (index > 0) {
+                href = href.substr(0, index + 1);
+            }
+            href = href.split('://')[1];
+            href = protocol + '://' + href;
+            if (!href.endsWith('/')) {
+                href += '/';
+            }
+            var ws_url = href + "socket";
+			me.socket = new WebSocket(ws_url);
 			me.socket.onopen = function(){
 				console.info('socket is now open!');
 				me.onConnect();
