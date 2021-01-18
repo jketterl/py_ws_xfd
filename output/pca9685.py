@@ -34,7 +34,7 @@ class Blinker(threading.Thread):
         # alpha filter
         self.filterTable = [0] * 16
         for i in range(16):
-            self.filterTable[i] = int(round(4095.0 * (i / 15.0) ** 2.2))
+            self.filterTable[i] = int(round(65535 * (i / 15.0) ** 2.2))
 
     def run(self):
         while(self.doRun):
@@ -51,7 +51,7 @@ class Blinker(threading.Thread):
 
     def setOutputs(self, value):
         for output in self.channels:
-            pwm.setPWM(output, 0, value)
+            pwm.channels[output].duty_cycle = value
 
     def _addChannel(self, channel):
         self.channels.append(channel)
@@ -63,7 +63,7 @@ class Blinker(threading.Thread):
 
 
 pwm = PCA9685(busio.I2C(SCL, SDA))
-pwm.setPWMFreq(600)
+pwm.frequency = 600
 
 
 class Pca9685(Output):
@@ -74,9 +74,9 @@ class Pca9685(Output):
 
         for i in range(0, len(self.leds)):
             for k in range(0, 4095, 256):
-                pwm.setPWM(self.offset + i, 0, k)
+                pwm.channels[self.offset + i].duty_cycle = k * 16
                 time.sleep(.02)
-            pwm.setPWM(self.offset + i, 0, 0)
+            pwm.channels[self.offset + i].duty_cycle =  0
         super(Pca9685, self).__init__(*args, **kwargs)
 
     def setState(self, projectId, state):
@@ -106,13 +106,13 @@ class Pca9685(Output):
         for index, value in enumerate(out):
             Blinker.removeChannel(self.offset + index)
             if value == "ON":
-                pwm.setPWM(self.offset + index, 0, 4095) 
+                pwm.channels[self.offset + index].duty_cycle = 65535 
             elif value == "BLINK":
                 Blinker.addChannel(self.offset + index)
             else:
-                pwm.setPWM(self.offset + index, 0, 0)
+                pwm.channels[self.offset + index].duty_cycle = 0
 
     def shutdown(self):
         for i in range(len(self.leds)):
             Blinker.removeChannel(self.offset + i)
-            pwm.setPWM(self.offset + i, 0, 0)
+            pwm.channels[self.offset + i].duty_cycle = 0
