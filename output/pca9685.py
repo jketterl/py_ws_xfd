@@ -34,7 +34,7 @@ class Blinker(threading.Thread):
         # alpha filter
         self.filterTable = [0] * 16
         for i in range(16):
-            self.filterTable[i] = int(round(65535 * (i / 15.0) ** 2.2))
+            self.filterTable[i] = round(max_brightness * (i / 15.0) ** 2.2)
 
     def run(self):
         while(self.doRun):
@@ -65,6 +65,8 @@ class Blinker(threading.Thread):
 pwm = PCA9685(busio.I2C(SCL, SDA))
 pwm.frequency = 600
 
+max_brightness = 5000
+
 
 class Pca9685(Output):
     def __init__(self, offset, leds, *args, **kwargs):
@@ -73,8 +75,8 @@ class Pca9685(Output):
         self.states = {}
 
         for i in range(0, len(self.leds)):
-            for k in range(0, 4095, 256):
-                pwm.channels[self.offset + i].duty_cycle = k * 16
+            for k in range(0, 16):
+                pwm.channels[self.offset + i].duty_cycle = round((k / 16) * max_brightness)
                 time.sleep(.02)
             pwm.channels[self.offset + i].duty_cycle =  0
         super(Pca9685, self).__init__(*args, **kwargs)
@@ -106,7 +108,7 @@ class Pca9685(Output):
         for index, value in enumerate(out):
             Blinker.removeChannel(self.offset + index)
             if value == "ON":
-                pwm.channels[self.offset + index].duty_cycle = 65535 
+                pwm.channels[self.offset + index].duty_cycle = max_brightness
             elif value == "BLINK":
                 Blinker.addChannel(self.offset + index)
             else:
